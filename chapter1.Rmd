@@ -9,5 +9,7 @@
 date()
 
 ```
-The text continues here.
+# The link to my GitHub repository is: https://github.com/tulenovo/IODS-project.
 
+I am really excited about this course, since I have used RStudio in the past to perform some statistical tests for my manuscript, but haven't constructively learned how to actually use it :)
+I've discovered this course in Yammer, which I usually don't use that often, so I am pretty lucky!
