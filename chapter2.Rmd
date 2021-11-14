@@ -1,13 +1,60 @@
-# Insert chapter 2 title here
+# Chapter 2: Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+In the first part of this exercise I've revised the knowledge gained in the DataComp exercise about reading data from the internet or files, working with the data frames and saving the data again. Script is saved in /data/create_learning2014.R.
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
-
+The second part of the exercise is about data analysis. First, the data from first part of the exercise is loaded:
 ```{r}
-date()
+learning2014 <- read.csv("data/learning2014.csv",header = TRUE,row.names = 1)
+# Changing the column gender to structure: factor
+learning2014$gender <- as.factor(learning2014$gender)   
+str(learning2014)
+dim(learning2014)
 ```
 
-Here we go again...
+The dataset learning2014 is from the international survey conducted in 2014-2015 from 183 students, who attended an introductory statistical course, 166 of which attended the final exam and therefore are kept in the variable learning2014. Students were asked questions about their attitude towards learning statistics, which were grouped into deep, surface and strategic learning (deep, stra and surf columns respectively). Other columns were: the global attitude towards statistics, age and gender (Attitude, Age and gender respectively). Points obtained in the final exam are listed under Points.
+
+```{r}
+
+#accessing the needed libraries
+library(GGally)
+library(ggplot2)
+
+# create a plot matrix with ggpairs() for the learning2014
+p <- ggpairs(learning2014, mapping = aes(col=gender,alpha=0.3), lower = list(combo = wrap("facethist", bins = 20)))
+
+# draw the plot
+p
+
+```
+
+The scatter plots and correlation are suggesting that the dependent variable Points is related to the variable attitude (based on the correlation value and the distribution of the variables). 
+Distribution of the variable age is very similar in both genders and skewed (which is expected for students at the university). 
+
+For the regression model, the variables attitude, stra and surf were picked as explanatory, since their correlation value to the dependent variable Points was the highest from available variables.
+```{r}
+#regression model with dependent variable points and attitude, stra and surf as explanatory variables and a summary of the model. 
+lm_points <- lm(Points ~ attitude + stra + surf, data = learning2014)
+summary(lm_points)
+```
+
+All explanatory variables accounted for 19% of variability (based on R^2^) and since the p-value of the F-test is very low, so there is evidence that at least one regression coefficient is not a zero. Based on the t-value, there is strong evidence that only the regression coefficient of the variable attitude is non-zero. 
+
+Now the regression model only with only attitude as a explanatory variable was run.
+```{r}
+#regression model with dependent variable points and attitude as explanatory variable and a summary of the model. 
+lm_points_att <- lm(Points ~ attitude, data = learning2014)
+summary(lm_points_att)
+```
+
+As we can see from the summary of the model lm_points_att, there is not much difference between running the model with or without the additional variables. 
+
+The graphical validation of the model lm_points:
+
+```{r}
+#plotting the Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage
+par(mfrow = c(2,2))
+plot(lm_points,which = c(1,2,5))
+
+```
+
+Based on the Residuals vs Fitted values graph, we can conclude that the residuals are normally distributed and that the fitted model is appropriate. The Normal QQ plot shows little evidence of departure from linearity. Also, no observations fell outside of the Cook's distance on the Residuals vs. Leverage plot, so there is no evidence for an influential observation. 
