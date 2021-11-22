@@ -1,0 +1,111 @@
+# Chapter 3: Logistic regression
+
+Loading data from the url:
+```{r}
+library(dplyr)
+url <- "https://github.com/rsund/IODS-project/raw/master/data/alc.csv"
+
+
+# read the csv table
+alc <- read.table(url, sep = "," , header=TRUE)
+glimpse(alc)
+```
+
+This dataset is providing information from two Portugese schools regarding the students performance in Mathematics (mat) and Protugese language (por). G1 G2 and G3 are the grades in first, second period and the final grade respectively. The dataset inlcudes also information about the student background like the parents job, alcohol consuption, extra-curricular activities and others. More information is found here: https://archive.ics.uci.edu/ml/datasets/Student+Performance.
+
+```{r}
+library(ggplot2)
+
+# initialize a plot of high_use and G3
+g1 <- ggplot(alc, aes(x = high_use, y = G3))
+
+# define the plot as a boxplot and draw it
+g1 + geom_boxplot() + ylab("grade") + ggtitle("Student absences by alcohol consumption")
+
+# initialise a plot of high_use and absences
+g2 <- ggplot(alc, aes(x = high_use, y = absences))
+
+# define the plot as a boxplot and draw it
+g2 + geom_boxplot() + ggtitle("Student absences by alcohol consumption")
+# initialise a plot of high_use and health
+g3 <- ggplot(alc, aes(x = high_use, y = health))
+
+# define the plot as a boxplot and draw it
+g3 + geom_boxplot() + ggtitle("Student health by alcohol consumption")
+# initialise a plot of high_use and quality of family relationships
+g3 <- ggplot(alc, aes(x = high_use, y = famrel))
+
+# define the plot as a boxplot and draw it
+g3 + geom_boxplot() + ggtitle("Student's quality of family relationships by alcohol consumption")
+
+
+```
+From the boxplots it seems that the alcohol consumption could be in a relationship with the final grade (G3), where the lower alcohol consumption could lead to better grade. Also, the high alcohol consumption could lead to more absences and students with lower alcohol consumption also seem to have a better quality of family relationships. There seems to be no relationship between the student's health and the alcohol consumption.
+
+```{r}
+#box plot for the grade by alcohol use
+g1 <- ggplot(data = alc, aes(x = G3,fill = high_use))
+
+
+g1 + geom_bar()
+
+g2 <- ggplot(data = alc, aes(x = absences,fill = high_use))
+
+# define the plot as a bar plot and draw it
+g2 + geom_bar()
+
+g3 <- ggplot(data = alc, aes(x = health,fill = high_use))
+
+# define the plot as a bar plot and draw it
+g3 + geom_bar()
+
+g4 <- ggplot(data = alc, aes(x = famrel,fill = high_use))
+
+# define the plot as a bar plot and draw it
+g4 + geom_bar()
+```
+
+The logistic model, where the high_use is the target variable and final grade G3, absences, health and quality of family relationships (famrel) are the predictors.
+
+```{r}
+# find the model with glm()
+m <- glm(high_use ~ G3 + absences+health+famrel, data = alc, family = "binomial")
+
+# print out a summary of the model
+summary(m)
+
+# print out the coefficients of the model
+coef(m)
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+
+```
+
+As predicted, the health does not seem to have any statistically significant relationship with the alcohol use. All other predictors show statistically significant relationship. The regression coefficient for the final grade shows, the log odds of the alcohol consumption is only 0,068 lower for the higher grade than for the lower.
+
+```{r}
+# define a loss function (average prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# compute the average number of wrong predictions in the (training) data
+
+
+# K-fold cross-validation
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = nrow(alc))
+cv$delta[1]
+# average number of wrong predictions in the 10-fold cross validation
+
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+# average number of wrong predictions in the 10-fold cross validation
+cv$delta[1]
+```
